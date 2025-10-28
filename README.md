@@ -1,4 +1,4 @@
-![login](./public/images/login.png)
+![login](./backend/public/images/login.png)
  📦 トラック運行管理アプリ（MVP）
 
 このアプリは、会社がドライバーに毎日の運行指示を伝えたり、
@@ -34,8 +34,8 @@ http://localhost:3000
 
 🔐 ログイン情報（MVP仕様）
 
-    種別                 名前         パスワード
-ドライバー ===　test   ===  0000
-　会社　　 ===　test   ===  0000　　　　　	　　　　　　　　　　　　　　　	　　　　
+     種別     　名前	      パスワード
+👷 ドライバー 	  test	      0000
+🏢 会社係	      test      	0000	　　　　
 
 ※ MVP版ではウィンドウアラートで簡易認証を実装。

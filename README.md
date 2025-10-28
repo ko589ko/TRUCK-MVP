@@ -1,5 +1,4 @@
-![login](./public/images/login.png)
-📦 トラック運行管理アプリ（MVP）
+<img width="1284" height="692" alt="Image" src="https://github.com/user-attachments/assets/2d14b5c2-212e-4164-92eb-b7862b7d63a5" />📦 トラック運行管理アプリ（MVP）
 
 このアプリは、会社がドライバーに毎日の運行指示を伝えたり、
 簡単に連絡を取れるようにしたものです。

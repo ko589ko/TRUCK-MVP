@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ドライバー画面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background: #d9ecff; font-family: 'Noto Sans JP', sans-serif; padding: 24px; }
+    .container-box {
+      max-width: 720px; background: #fff; border-radius: 16px; padding: 25px; margin: auto;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.1); text-align:center;
+    }
+    h2 { color:#1565c0; font-weight:700; margin-bottom:6px; }
+    .day-btn { border:none; padding:8px 18px; border-radius:8px; background:#e3f2fd; color:#1565c0; font-weight:600; }
+    .day-btn.active { background:#1565c0; color:white; }
+    .menu-btn { background:#1976d2; color:white; padding:8px 18px; border-radius:8px; border:none; font-weight:600; }
+
+    .box { 
+      text-align:left; padding:18px; 
+      border:1px solid #bbdefb; border-radius:12px; background:#f9fcff; 
+      margin-top:18px; font-size:17px; line-height:1.8;
+      min-height: 160px;
+    }
+
+    .logout-btn { width:100%; background:#e3f2fd; border:1px solid #1565c0; padding:12px; border-radius:8px; margin-top:25px; font-weight:600; }
+  </style>
+</head>
+
+<body>
+<div class="container-box">
+
+  <h2>🚚 ドライバー画面</h2>
+  <p style="color:#1565c0; font-weight:700;">ドライバー：<span id="driverName"></span></p>
+  <hr>
+
+  <div>
+    <button id="btnToday" class="day-btn active" onclick="showToday()">今日</button>
+    <button id="btnTomorrow" class="day-btn" onclick="showTomorrow()">明日</button>
+    <button class="menu-btn" onclick="location.href='driver_history.html'">📜 履歴</button>
+    <button class="menu-btn" onclick="location.href='driver_inquiry.html'">💬 チャット</button>
+  </div>
+
+  <div id="todayBox" class="box">読み込み中...</div>
+  <div id="tomorrowBox" class="box" style="display:none;">読み込み中...</div>
+
+  <button class="logout-btn" onclick="location.href='index.html'">← ログアウト</button>
+
+</div>
+
+<script>
+// ✅ ドライバー名の保存・取得を統一（ここがチャット不具合の原因だった）
+const params = new URLSearchParams(location.search);
+let driver = params.get("driver") || localStorage.getItem("driver");
+if (!driver || driver === "未設定" || driver.trim() === "") driver = "test";
+localStorage.setItem("driver", driver);
+document.getElementById("driverName").textContent = driver;
+
+// ✅ 指示データ読み込み
+async function loadSchedule() {
+  const res = await fetch(`/api/schedule?driver=${encodeURIComponent(driver)}`);
+  const data = await res.json();
+
+  const today = new Date().toISOString().split("T")[0];
+  const tomorrow = new Date(Date.now()+86400000).toISOString().split("T")[0];
+
+  const t = data.find(d=>d.date.startsWith(today));
+  const n = data.find(d=>d.date.startsWith(tomorrow));
+
+  document.getElementById("todayBox").innerHTML = t ? format(t) : "指示はありません。";
+  document.getElementById("tomorrowBox").innerHTML = n ? format(n) : "指示はありません。";
+}
+
+// ✅ 表示フォーマット（読みやすく & 幅が狭くならない）
+function format(d){
+  return `
+    📍 <b>行き先</b><br>${d.destination || "-"}<br><br>
+    📦 <b>荷物</b><br>${d.cargo || "-"}<br><br>
+    🚛 <b>トラック番号</b><br>${d.truck_number || "-"}<br><br>
+    🏢 <b>会社からの指示</b><br>${d.company_message || "なし"}
+  `;
+}
+
+// ✅ タブ切り替え
+function showToday(){ 
+  todayBox.style.display="block"; 
+  tomorrowBox.style.display="none"; 
+  btnToday.classList.add("active");
+  btnTomorrow.classList.remove("active");
+}
+function showTomorrow(){
+  todayBox.style.display="none"; 
+  tomorrowBox.style.display="block"; 
+  btnTomorrow.classList.add("active");
+  btnToday.classList.remove("active");
+}
+
+loadSchedule();
+</script>
+
+</body>
+</html>

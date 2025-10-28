@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ドライバー履歴（個別）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #e3f2fd;
+      font-family: 'Noto Sans JP', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      width: 100%;
+      max-width: 720px;
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      position: relative;
+    }
+
+    h2 {
+      text-align: center;
+      color: #1565c0;
+      font-weight: 700;
+      margin-bottom: 22px;
+    }
+
+    /* ✅ Excel ボタン（元の緑に戻す） */
+    .excel-btn {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background: #43a047;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .excel-btn:hover { background: #2e7d32; }
+
+    .record-box {
+      background: #f9fcff;
+      border: 1px solid #bbdefb;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+      font-size: 15px;
+      line-height: 1.5em;
+    }
+
+    /* ✅ 戻るボタンを薄い青に統一 */
+    .back-btn {
+      width: 100%;
+      margin-top: 22px;
+      border: 1px solid #1565c0;
+      color: #1565c0;
+      background: #e3f2fd;
+      border-radius: 10px;
+      padding: 12px;
+      font-weight: 600;
+    }
+    .back-btn:hover { background: #bbdefb; }
+  </style>
+</head>
+
+<body>
+<div class="box">
+
+  <h2 id="title">📜 履歴</h2>
+
+  <!-- ✅ Excel ボタン -->
+  <button class="excel-btn" onclick="alert('エクセル出力は後で実装します')">
+    📄 Excel
+  </button>
+
+  <div id="historyList">読み込み中...</div>
+
+  <button class="back-btn" onclick="location.href='company_history.html'">← 戻る</button>
+
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const driver = params.get("driver") || "";
+
+document.getElementById("title").textContent = `🧾 ${driver} の履歴`;
+
+async function loadHistory() {
+  const res = await fetch(`/api/schedule?driver=${encodeURIComponent(driver)}`);
+  const data = await res.json();
+
+  if (data.length === 0) {
+    document.getElementById("historyList").innerHTML = "<p>履歴はありません。</p>";
+    return;
+  }
+
+  document.getElementById("historyList").innerHTML = data.map(d => `
+    <div class="record-box">
+      <strong>${d.date.split("T")[0]}</strong><br><br>
+      📍 <strong>行き先：</strong>${d.destination || "-"}<br>
+      📦 <strong>荷物：</strong>${d.cargo || "-"}<br>
+      🚚 <strong>トラック：</strong>${d.truck_number || "-"}<br>
+      🏢 <strong>指示：</strong>${d.company_message || "-"}
+    </div>
+  `).join("");
+}
+
+loadHistory();
+</script>
+
+</body>
+</html>

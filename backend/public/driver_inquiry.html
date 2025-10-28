@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>チャット（ドライバー → 会社）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body { background:#d9ecff; font-family:'Noto Sans JP',sans-serif; }
+    .chat-box {
+      max-width:720px; margin:auto; background:#fff; padding:20px;
+      border-radius:14px; box-shadow:0 6px 18px rgba(0,0,0,0.1); margin-top:30px;
+    }
+    h3 { text-align:center; color:#1565c0; font-weight:700; margin-bottom:10px; }
+    #messages {
+      height:60vh; overflow-y:auto; border:1px solid #bbdefb;
+      border-radius:10px; padding:12px; background:#f9fcff; margin-bottom:12px;
+    }
+    .msg { padding:8px 12px; border-radius:10px; margin-bottom:10px; max-width:75%; font-size:15px; }
+    .mine { background:#1976d2; color:white; margin-left:auto; }
+    .other { background:#e3f2fd; border:1px solid #90caf9; }
+    .time { font-size:11px; opacity:0.7; margin-top:3px; }
+    #sendBox { display:flex; gap:8px; }
+    #sendInput { flex:1; border-radius:8px; border:1px solid #90caf9; padding:8px; }
+    .back-btn { width:100%; padding:10px; border-radius:8px; background:#e3f2fd; border:1px solid #1565c0; font-weight:600; margin-top:12px; }
+  </style>
+</head>
+
+<body>
+<div class="chat-box">
+  <h3>💬 チャット</h3>
+  <hr>
+
+  <div id="messages">読み込み中...</div>
+
+  <div id="sendBox">
+    <input id="sendInput" type="text" placeholder="メッセージを入力">
+    <button class="btn btn-primary" onclick="sendMessage()">送信</button>
+  </div>
+
+  <button class="back-btn" onclick="location.href='driver_home.html'">← 戻る</button>
+</div>
+
+<script>
+function formatTime(ts) {
+  if (!ts) return "";
+  const date = new Date(ts);
+  const week = ["日","月","火","水","木","金","土"];
+  const m = date.getMonth()+1;
+  const d = date.getDate();
+  const w = week[date.getDay()];
+  const hh = String(date.getHours()).padStart(2,'0');
+  const mm = String(date.getMinutes()).padStart(2,'0');
+  return `${m}/${d}(${w}) ${hh}:${mm}`;
+}
+
+const driver = localStorage.getItem("driver") || "test";
+
+async function loadMessages() {
+  const res = await fetch(`/api/messages?driver=${encodeURIComponent(driver)}`);
+  const data = await res.json();
+
+  const box = document.getElementById("messages");
+  box.innerHTML = data.map(m => `
+    <div class="msg ${m.role === 'driver' ? 'mine' : 'other'}">
+      <div>${m.message}</div>
+      <div class="time">${formatTime(m.timestamp)}</div>
+    </div>
+  `).join("");
+
+  box.scrollTop = box.scrollHeight;
+}
+
+setInterval(loadMessages, 2000);
+loadMessages();
+
+async function sendMessage() {
+  const text = document.getElementById("sendInput").value.trim();
+  if (!text) return alert("メッセージを入力してください。");
+
+  await fetch("/api/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({ driver, role:"driver", message:text })
+  });
+
+  document.getElementById("sendInput").value = "";
+}
+</script>
+
+</body>
+</html>

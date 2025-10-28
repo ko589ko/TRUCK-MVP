@@ -1,0 +1,35 @@
+# Node.js dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# OS/System files
+.DS_Store
+Thumbs.db
+
+# Docker local database stored volume folders
+postgres-data/
+db-data/
+docker-volume/
+
+# Local build / cache
+dist/
+build/
+.cache/
+
+# Temporary files
+*.tmp
+*.swp
+
+# VSCode settings (optional)
+.vscode/

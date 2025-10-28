@@ -1,5 +1,4 @@
-![login](./public/images/login.png) 
-
+![login](https://github.com/ko589ko/TRUCK-MVP/blob/main/login.png?raw=true)
 📦 トラック運行管理アプリ（MVP）
 
 このアプリは、会社がドライバーに毎日の運行指示を伝えたり、

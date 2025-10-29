@@ -1,12 +1,20 @@
 import express from "express";
 import cors from "cors";
 import pkg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
+
 const { Pool } = pkg;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("./public"));
+
+// ✅ 静的ファイル配信（絶対パスで指定）
+app.use(express.static(path.join(__dirname, "public")));
 
 // ==============================
 // ✅ PostgreSQL 接続設定
@@ -35,7 +43,7 @@ app.get("/api/drivers", async (req, res) => {
 });
 
 // ==============================
-// 📅 スケジュール取得（ドライバー別）
+// 📅 スケジュール取得
 // ==============================
 app.get("/api/schedule", async (req, res) => {
   const { driver } = req.query;
@@ -52,7 +60,7 @@ app.get("/api/schedule", async (req, res) => {
 });
 
 // ==============================
-// 📝 スケジュール作成 / 更新
+// 📝 スケジュール作成・更新
 // ==============================
 app.post("/api/schedule", async (req, res) => {
   const { driver, date, destination, cargo, truck_number, company_message } = req.body;
@@ -85,7 +93,7 @@ app.post("/api/schedule", async (req, res) => {
 });
 
 // ==============================
-// 💬 メッセージ一覧取得（チャット）
+// 💬 メッセージ取得・作成
 // ==============================
 app.get("/api/messages", async (req, res) => {
   const { driver } = req.query;
@@ -101,9 +109,6 @@ app.get("/api/messages", async (req, res) => {
   }
 });
 
-// ==============================
-// ✉️ メッセージ送信（会社 ⇄ ドライバー）
-// ==============================
 app.post("/api/messages", async (req, res) => {
   const { driver, role, subject, message, date } = req.body;
   try {
@@ -120,88 +125,25 @@ app.post("/api/messages", async (req, res) => {
 });
 
 // ==============================
-// ✅ 既読処理
+// ✅ 静的HTML ルート設定（重要!!）
 // ==============================
-app.post("/api/messages/read", async (req, res) => {
-  const { driver } = req.body;
-  try {
-    await pool.query(
-      "UPDATE messages SET read_flag = TRUE WHERE driver=$1 AND role='driver'",
-      [driver]
-    );
-    res.json({ message: "Marked as read" });
-  } catch (err) {
-    console.error("❌ /api/messages/read error:", err);
-    res.status(500).json({ error: "Failed to mark as read" });
-  }
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 // ==============================
-// 📜 履歴（ドライバー別）
-// ==============================
-app.get("/api/history", async (req, res) => {
-  const { driver } = req.query;
-  try {
-    const result = await pool.query(
-      `SELECT date, destination, cargo, truck_number, company_message
-       FROM schedule WHERE driver=$1 ORDER BY date DESC`,
-      [driver]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error("❌ /api/history error:", err);
-    res.status(500).json({ error: "Failed to fetch history" });
-  }
-});
-
-// ==============================
-// ❌ ドライバー削除（非アクティブ化）
-// ==============================
-app.post("/api/drivers/delete", async (req, res) => {
-  const { name } = req.body;
-  try {
-    await pool.query("UPDATE driver_list SET active = FALSE WHERE name=$1", [name]);
-    await pool.query("DELETE FROM schedule WHERE driver=$1", [name]);
-    await pool.query("DELETE FROM messages WHERE driver=$1", [name]);
-    res.json({ message: `${name} を削除しました` });
-  } catch (err) {
-    console.error("❌ /api/drivers/delete error:", err);
-    res.status(500).json({ error: "Failed to delete driver" });
-  }
-});
-
-// ==============================
-// ➕ 新規ドライバー登録
-// ==============================
-app.post("/api/drivers/add", async (req, res) => {
-  const { name, phone, address } = req.body;
-  try {
-    await pool.query(
-      "INSERT INTO driver_list (name, phone, address, active) VALUES ($1,$2,$3, TRUE)",
-      [name, phone, address]
-    );
-    res.json({ message: "登録しました" });
-  } catch (err) {
-    console.error("❌ /api/drivers/add error:", err);
-    res.status(500).json({ error: "Failed to register driver" });
-  }
-});
-// ==============================
-// 🧹 古いメッセージ自動削除（3日）
+// 🧹 古いメッセージ削除
 // ==============================
 async function cleanOldMessages() {
   await pool.query("DELETE FROM messages WHERE timestamp < NOW() - INTERVAL '3 days'");
   console.log("🧹 3日より前のメッセージを削除しました");
 }
-
-// 24時間ごとに自動実行
 setInterval(cleanOldMessages, 24 * 60 * 60 * 1000);
 
-
 // ==============================
-// 🚀 サーバー起動
+// 🚀 サーバー起動 (Fly.io対応)
 // ==============================
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`✅ Server Running → http://localhost:${PORT}`);
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`✅ Server Running → http://0.0.0.0:${PORT}`);
 });

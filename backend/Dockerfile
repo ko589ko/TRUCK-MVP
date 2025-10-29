@@ -1,10 +1,13 @@
-FROM node:20-alpine
+FROM node:18
 
-WORKDIR /usr/src/app
+WORKDIR /app
+
 COPY package*.json ./
+RUN npm ci --omit=dev
 
-RUN npm install
 COPY . .
 
-EXPOSE 3000
-CMD ["npm", "start"]
+ENV PORT=8080
+EXPOSE 8080
+
+CMD ["node", "server.js"]
